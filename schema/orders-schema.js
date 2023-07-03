@@ -86,7 +86,15 @@ const Mutation = new GraphQLObjectType({
                 const newOrder = {...args}
                 console.log(args)
                 orders.unshift(newOrder);
-                return newOrder;
+                return orders[0];
+            }
+        },
+        DeleteOrder: {
+            type: OrderType,
+            args: ({OrderID: {type: GraphQLID}}),
+            resolve (parent, args){
+                const index = orders.findIndex(order=>order.OrderID == args.OrderID);
+                return orders.splice(index, 1);
             }
         }
     }

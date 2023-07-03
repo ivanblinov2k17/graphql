@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import './App.css';
 import {
   DataGrid, Column, Editing, Scrolling, Lookup, Summary, TotalItem,
 } from 'devextreme-react/data-grid';
@@ -61,6 +61,13 @@ mutation($OrderID: ID, $CustomerID: String, $OrderDate: String, $Freight: Float,
   }
 }`
 
+const DeleteOrderMutation = gql`
+mutation($OrderID: ID){
+  DeleteOrder(OrderID: $OrderID){
+    OrderID
+  }
+}`
+
 const refreshModeLabel = { 'aria-label': 'Refresh Mode' };
 // const URL = 'https://js.devexpress.com/Demos/Mvc/api/DataGridWebApi';
 const URL = 'http://localhost:3005';
@@ -69,7 +76,8 @@ const REFRESH_MODES = ['full', 'reshape', 'repaint'];
 
 export default function App() {
   const appoloClient = useApolloClient();
-  const [InsertOrder, {data: mutationData, loading, error}] = useMutation(InsertOrderMutation);
+  const [InsertOrder] = useMutation(InsertOrderMutation);
+  const [DeleteOrder] = useMutation(DeleteOrderMutation);
   const [ordersData, setOrdersData] = useState(new CustomStore({
     key: 'OrderID',
     load: () => sendRequest(`Orders`),
@@ -108,6 +116,8 @@ export default function App() {
         return appoloClient.query({query: ShippersQuery}).then(response => response.data.Shippers);
       case 'InsertOrder':
         return InsertOrder({variables: data.values}).then(res => console.log(res));
+      case 'DeleteOrder':
+        return DeleteOrder({variables: data.values}).then(res => console.log(res));
         
         
         
