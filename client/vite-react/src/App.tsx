@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
   DataGrid, Column, Editing, Scrolling, Lookup, Summary, TotalItem,
 } from 'devextreme-react/data-grid';
+import { DataGridTypes } from 'devextreme-react/data-grid';
 import { Button } from 'devextreme-react/button';
 import { SelectBox } from 'devextreme-react/select-box';
 
@@ -41,7 +42,7 @@ export default function App() {
     load: () => sendRequest(`${URL}/ShippersLookup`),
   }));
   const [requests, setRequests] = useState<string[]>([]);
-  const [refreshMode, setRefreshMode] = useState('reshape');
+  const [refreshMode, setRefreshMode] = useState<DataGridTypes.GridsEditRefreshMode>('reshape');
 
   const sendRequest = (url, method = 'GET', data = {}) => {
     logRequest(method, url, data);
