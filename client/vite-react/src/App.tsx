@@ -9,6 +9,31 @@ import { SelectBox } from 'devextreme-react/select-box';
 
 import CustomStore from 'devextreme/data/custom_store';
 import { formatDate } from 'devextreme/localization';
+import { useQuery, gql, useApolloClient } from '@apollo/client';
+
+const OrdersQuery = gql`
+query{
+  Orders {
+    OrderID,
+    CustomerID,
+    EmployeeID,
+    OrderDate,
+    RequiredDate,
+    ShippedDate,
+    ShipVia,
+    Freight,
+    ShipName,
+    ShipAddress,
+    ShipCity,
+    ShipRegion,
+    ShipPostalCode,
+    ShipCountry,
+    Customer,
+    Employee,
+    Shipper
+  }
+}
+`
 
 const refreshModeLabel = { 'aria-label': 'Refresh Mode' };
 // const URL = 'https://js.devexpress.com/Demos/Mvc/api/DataGridWebApi';
@@ -17,6 +42,7 @@ const URL = 'http://localhost:3005';
 const REFRESH_MODES = ['full', 'reshape', 'repaint'];
 
 export default function App() {
+  const appoloClient = useApolloClient();
   const [ordersData, setOrdersData] = useState(new CustomStore({
     key: 'OrderID',
     load: () => sendRequest(`${URL}/Orders`),
@@ -46,34 +72,9 @@ export default function App() {
 
   const sendRequest = (url, method = 'GET', data = {}) => {
     logRequest(method, url, data);
-
-    if (method === 'GET') {
-      return fetch(url, {
-        method,
-        credentials: 'include',
-      }).then((result) => result.json().then((json) => {
-        if (result.ok) return json.data;
-        throw json.Message;
-      }));
-    }
-
-    const params = Object.keys(data).map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`).join('&');
-
-    return fetch(url, {
-      method,
-      body: params,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-      },
-      credentials: 'include',
-    }).then((result) => {
-      if (result.ok) {
-        return result.text().then((text) => text && JSON.parse(text));
-      }
-      return result.json().then((json) => {
-        throw json.Message;
-      });
-    });
+    const response = appoloClient.query({query: OrdersQuery}).then(response => response.data.Orders);
+    console.log(response);
+    return response;
   }
 
   const logRequest = (method, url, data) => {
