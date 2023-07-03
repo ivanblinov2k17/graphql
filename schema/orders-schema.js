@@ -1,5 +1,7 @@
 const graphql = require('graphql');
 const orders = require('../data/orders.json').data;
+const customers = require('../data/customers.json').data;
+const shippers = require('../data/shippers.json').data;
 
 const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLID, GraphQLInt, GraphQLFloat, GraphQLList } = graphql;
 
@@ -27,6 +29,22 @@ const OrderType = new GraphQLObjectType({
     })
 })
 
+const CustomerType = new GraphQLObjectType({
+    name: `Customer`,
+    fields: () => ({
+        Value: {type: GraphQLString},
+        Text: {type: GraphQLString},
+    })
+})
+
+const ShipperType = new GraphQLObjectType({
+    name: `Shipper`,
+    fields: () => ({
+        Value: {type: GraphQLString},
+        Text: {type: GraphQLString},
+    })
+})
+
 const Query = new GraphQLObjectType({
     name: `Query`,
     fields: {
@@ -35,10 +53,46 @@ const Query = new GraphQLObjectType({
             resolve(parent, args) {
                 return orders;
             }
+        },
+        Customers: {
+            type: new GraphQLList(CustomerType),
+            resolve(parent, args) {
+                return customers;
+            }
+        },
+        Shippers: {
+            type: new GraphQLList(ShipperType),
+            resolve(parent, args) {
+                return shippers;
+            }
         }
     }
 });
 
+const Mutation = new GraphQLObjectType({
+    name: `Mutation`,
+    fields: {
+        InsertOrder: {
+            type: OrderType,
+            args: ({
+                OrderID: {type: GraphQLID},
+                CustomerID: {type: GraphQLString},
+                OrderDate: {type: GraphQLString},
+                Freight: {type: GraphQLFloat},
+                ShipCountry: {type: GraphQLString}, 
+                ShipVia: {type: GraphQLInt}
+            }),
+            resolve(parent, args){
+                const newOrder = {...args}
+                console.log(args)
+                orders.unshift(newOrder);
+                return newOrder;
+            }
+        }
+    }
+})
+
 module.exports = new GraphQLSchema({
     query: Query,
+    mutation: Mutation,
 });

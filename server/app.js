@@ -18,14 +18,6 @@ app.use('/Orders', graphqlHTTP({
     graphiql: true
 }))
 
-// app.use('/CustomersLookup', graphqlHTTP({
-//     CustomersLookupSchema,
-// }))
-
-// app.use('/ShippersLookup', graphqlHTTP({
-//     ShippersLookupSchema,
-// }))
-
 app.listen(PORT, err => {
     err ? console.log(err) : console.log('server started!')
 })

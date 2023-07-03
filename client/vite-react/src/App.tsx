@@ -9,7 +9,7 @@ import { SelectBox } from 'devextreme-react/select-box';
 
 import CustomStore from 'devextreme/data/custom_store';
 import { formatDate } from 'devextreme/localization';
-import { useQuery, gql, useApolloClient } from '@apollo/client';
+import { useQuery, gql, useApolloClient, useMutation } from '@apollo/client';
 
 const OrdersQuery = gql`
 query{
@@ -32,8 +32,34 @@ query{
     Employee,
     Shipper
   }
-}
-`
+}`;
+const CustomersQuery = gql`
+query{
+  Customers {
+    Value,
+    Text
+  }
+}`;
+
+const ShippersQuery = gql`
+query{
+  Shippers {
+    Value,
+    Text
+  }
+}`;
+
+const InsertOrderMutation = gql`
+mutation($OrderID: ID, $CustomerID: String, $OrderDate: String, $Freight: Float, $ShipCountry: String, $ShipVia: Int){
+  InsertOrder(OrderID: $OrderID, CustomerID: $CustomerID, OrderDate: $OrderDate, Freight: $Freight, ShipCountry: $ShipCountry, ShipVia: $ShipVia){
+    OrderID,
+    CustomerID,
+    OrderDate,
+    Freight,
+    ShipCountry,
+    ShipVia
+  }
+}`
 
 const refreshModeLabel = { 'aria-label': 'Refresh Mode' };
 // const URL = 'https://js.devexpress.com/Demos/Mvc/api/DataGridWebApi';
@@ -43,35 +69,49 @@ const REFRESH_MODES = ['full', 'reshape', 'repaint'];
 
 export default function App() {
   const appoloClient = useApolloClient();
+  const [InsertOrder, {data: mutationData, loading, error}] = useMutation(InsertOrderMutation);
   const [ordersData, setOrdersData] = useState(new CustomStore({
     key: 'OrderID',
-    load: () => sendRequest(`${URL}/Orders`),
-    insert: (values) => sendRequest(`${URL}/InsertOrder`, 'POST', {
-      values: JSON.stringify(values),
+    load: () => sendRequest(`Orders`),
+    insert: (values) => sendRequest(`InsertOrder`, 'POST', {
+      values,
     }),
-    update: (key, values) => sendRequest(`${URL}/UpdateOrder`, 'PUT', {
+    update: (key, values) => sendRequest(`UpdateOrder`, 'PUT', {
       key,
-      values: JSON.stringify(values),
+      values,
     }),
-    remove: (key) => sendRequest(`${URL}/DeleteOrder`, 'DELETE', {
+    remove: (key) => sendRequest(`DeleteOrder`, 'DELETE', {
       key,
     }),
   }));
   const [customersData, setCustomersData] = useState(new CustomStore({
     key: 'Value',
     loadMode: 'raw',
-    load: () => sendRequest(`${URL}/CustomersLookup`),
+    load: () => sendRequest(`Customers`),
   }));
   const [shippersData, setShippersData] = useState(new CustomStore({
     key: 'Value',
     loadMode: 'raw',
-    load: () => sendRequest(`${URL}/ShippersLookup`),
+    load: () => sendRequest(`Shippers`),
   }));
   const [requests, setRequests] = useState<string[]>([]);
   const [refreshMode, setRefreshMode] = useState<DataGridTypes.GridsEditRefreshMode>('reshape');
 
-  const sendRequest = (url, method = 'GET', data = {}) => {
-    logRequest(method, url, data);
+  const sendRequest = (query: string, method = 'GET', data = {}) => {
+    logRequest(method, query, data);
+    switch (query){
+      case 'Orders':
+        return appoloClient.query({query: OrdersQuery}).then(response => response.data.Orders);
+      case 'Customers':
+        return appoloClient.query({query: CustomersQuery}).then(response => response.data.Customers);
+      case 'Shippers':
+        return appoloClient.query({query: ShippersQuery}).then(response => response.data.Shippers);
+      case 'InsertOrder':
+        return InsertOrder({variables: data.values}).then(res => console.log(res));
+        
+        
+        
+    }
     const response = appoloClient.query({query: OrdersQuery}).then(response => response.data.Orders);
     console.log(response);
     return response;
