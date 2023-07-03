@@ -1,7 +1,7 @@
 const graphql = require('graphql');
-const orders = require('../data/orders.json');
+const orders = require('../data/orders.json').data;
 
-const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLID, GraphQLInt, GraphQLFloat } = graphql;
+const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLID, GraphQLInt, GraphQLFloat, GraphQLList } = graphql;
 
 const OrderType = new GraphQLObjectType({
     name: `Order`,
@@ -30,11 +30,10 @@ const OrderType = new GraphQLObjectType({
 const Query = new GraphQLObjectType({
     name: `Query`,
     fields: {
-        Order: {
-            type: OrderType,
-            args: {},
+        Orders: {
+            type: new GraphQLList(OrderType),
             resolve(parent, args) {
-                return orders.data;
+                return orders;
             }
         }
     }

@@ -14,8 +14,8 @@ app.use('/graphql', graphqlHTTP({
 }));
 
 app.use('/Orders', graphqlHTTP({
-    OrdersSchema,
-    
+    schema: OrdersSchema,
+    graphiql: true
 }))
 
 // app.use('/CustomersLookup', graphqlHTTP({
