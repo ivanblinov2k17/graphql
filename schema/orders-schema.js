@@ -40,7 +40,7 @@ const CustomerType = new GraphQLObjectType({
 const ShipperType = new GraphQLObjectType({
     name: `Shipper`,
     fields: () => ({
-        Value: {type: GraphQLString},
+        Value: {type: GraphQLInt},
         Text: {type: GraphQLString},
     })
 })
@@ -75,7 +75,6 @@ const Mutation = new GraphQLObjectType({
         InsertOrder: {
             type: OrderType,
             args: ({
-                OrderID: {type: GraphQLID},
                 CustomerID: {type: GraphQLString},
                 OrderDate: {type: GraphQLString},
                 Freight: {type: GraphQLFloat},
@@ -83,10 +82,11 @@ const Mutation = new GraphQLObjectType({
                 ShipVia: {type: GraphQLInt}
             }),
             resolve(parent, args){
-                const newOrder = {...args}
-                console.log(args)
-                orders.unshift(newOrder);
-                return orders[0];
+                const newOrderID = Math.max(...orders.map(order => order.OrderID)) + 1;
+                const newOrder = { OrderID: newOrderID, ...args }
+                console.log(`CREATE ${JSON.stringify(newOrder)}`)
+                orders.push(newOrder);
+                return orders[orders.length - 1];
             }
         },
         DeleteOrder: {
@@ -94,7 +94,27 @@ const Mutation = new GraphQLObjectType({
             args: ({OrderID: {type: GraphQLID}}),
             resolve (parent, args){
                 const index = orders.findIndex(order=>order.OrderID == args.OrderID);
+                console.log(`DELETE {${args.OrderID}}`)
                 return orders.splice(index, 1);
+            }
+        },
+        UpdateOrder: {
+            type: OrderType,
+            args: ({
+                OrderID: {type: GraphQLID},
+                CustomerID: {type: GraphQLString},
+                OrderDate: {type: GraphQLString},
+                Freight: {type: GraphQLFloat},
+                ShipCountry: {type: GraphQLString}, 
+                ShipVia: {type: GraphQLInt}
+            }),
+            resolve(parent, args) {
+                const index = orders.findIndex(order=>order.OrderID == args.OrderID);
+                const oldOrder = orders[index];
+                const newOrder = {...oldOrder, ...args}
+                console.log(`UPDATE ${JSON.stringify(newOrder)}`)
+                orders.splice(index, 1, newOrder)
+                return newOrder;
             }
         }
     }
