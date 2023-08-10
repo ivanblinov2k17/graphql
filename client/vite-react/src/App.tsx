@@ -9,7 +9,10 @@ import { SelectBox } from 'devextreme-react/select-box';
 
 import CustomStore from 'devextreme/data/custom_store';
 import { formatDate } from 'devextreme/localization';
-import { useQuery, gql, useApolloClient, useMutation } from '@apollo/client';
+import { gql, useApolloClient, useMutation } from '@apollo/client';
+import { OrderValues } from './types';
+
+import _ from 'lodash';
 
 const OrdersQuery = gql`
 query{
@@ -50,8 +53,8 @@ query{
 }`;
 
 const InsertOrderMutation = gql`
-mutation($OrderID: ID, $CustomerID: String, $OrderDate: String, $Freight: Float, $ShipCountry: String, $ShipVia: Int){
-  InsertOrder(OrderID: $OrderID, CustomerID: $CustomerID, OrderDate: $OrderDate, Freight: $Freight, ShipCountry: $ShipCountry, ShipVia: $ShipVia){
+mutation($CustomerID: String, $OrderDate: String, $Freight: Float, $ShipCountry: String, $ShipVia: Int){
+  InsertOrder(CustomerID: $CustomerID, OrderDate: $OrderDate, Freight: $Freight, ShipCountry: $ShipCountry, ShipVia: $ShipVia){
     OrderID,
     CustomerID,
     OrderDate,
@@ -68,6 +71,18 @@ mutation($OrderID: ID){
   }
 }`
 
+const UpdateOrderMutation = gql`
+mutation($OrderID: ID, $CustomerID: String, $OrderDate: String, $Freight: Float, $ShipCountry: String, $ShipVia: Int){
+  UpdateOrder(OrderID: $OrderID, CustomerID: $CustomerID, OrderDate: $OrderDate, Freight: $Freight, ShipCountry: $ShipCountry, ShipVia: $ShipVia){
+    OrderID,
+    CustomerID,
+    OrderDate,
+    Freight,
+    ShipCountry,
+    ShipVia
+  }
+}`
+
 const refreshModeLabel = { 'aria-label': 'Refresh Mode' };
 // const URL = 'https://js.devexpress.com/Demos/Mvc/api/DataGridWebApi';
 const URL = 'http://localhost:3005';
@@ -78,9 +93,10 @@ export default function App() {
   const appoloClient = useApolloClient();
   const [InsertOrder] = useMutation(InsertOrderMutation);
   const [DeleteOrder] = useMutation(DeleteOrderMutation);
-  const [ordersData, setOrdersData] = useState(new CustomStore({
+  const [UpdateOrder] = useMutation(UpdateOrderMutation);
+  const [ordersData, setOrdersData] = useState(new CustomStore<OrderValues, string>({
     key: 'OrderID',
-    load: () => sendRequest(`Orders`),
+    load: () => sendRequest(`Orders`).then(data => _.cloneDeep(data)),
     insert: (values) => sendRequest(`InsertOrder`, 'POST', {
       values,
     }),
@@ -105,8 +121,8 @@ export default function App() {
   const [requests, setRequests] = useState<string[]>([]);
   const [refreshMode, setRefreshMode] = useState<DataGridTypes.GridsEditRefreshMode>('reshape');
 
-  const sendRequest = (query: string, method = 'GET', data = {}) => {
-    logRequest(method, query, data);
+  const sendRequest = (query: string, method = 'GET', data: { key?: string, values?: any } = {}) => {
+    //logRequest(method, query, data);
     switch (query){
       case 'Orders':
         return appoloClient.query({query: OrdersQuery}).then(response => response.data.Orders);
@@ -115,23 +131,22 @@ export default function App() {
       case 'Shippers':
         return appoloClient.query({query: ShippersQuery}).then(response => response.data.Shippers);
       case 'InsertOrder':
-        return InsertOrder({variables: data.values}).then(res => console.log(res));
+        return InsertOrder({variables: data.values}).then(res => res.data.InsertOrder);
       case 'DeleteOrder':
-        return DeleteOrder({variables: data.values}).then(res => console.log(res));
-        
-        
-        
+        return DeleteOrder({variables: { OrderID: data.key }}).then(res => console.log(res));
+      case 'UpdateOrder':
+        return UpdateOrder({variables: { OrderID: data.key, ...data.values }}).then(res => res.data.UpdateOrder);
     }
     const response = appoloClient.query({query: OrdersQuery}).then(response => response.data.Orders);
     console.log(response);
     return response;
   }
 
-  const logRequest = (method, url, data) => {
-    const args = Object.keys(data || {}).map((key) => `${key}=${data[key]}`).join(' ');
+  const logRequest = (method: string, query: string, data: { key?: string, values?: any }) => {
+    const args = (data.key ? `key=${data.key} (${typeof data.key})` : '').concat(Object.keys(data.values || {}).map((key) => `${key}=${data.values[key]} (${typeof data.values[key]})`).join(' '));
 
     const time = formatDate(new Date(), 'HH:mm:ss');
-    const request = [time, method, url.slice(URL.length), args].join(' ');
+    const request = [time, method, query, args].join(' ');
 
     setRequests((requests) => [request].concat(requests))
   }
@@ -162,6 +177,9 @@ export default function App() {
         <Scrolling
           mode="virtual"
         />
+
+        <Column dataField="OrderID" dataType="string" allowEditing={false}>
+        </Column>
 
         <Column dataField="CustomerID" caption="Customer">
           <Lookup dataSource={customersData} valueExpr="Value" displayExpr="Text" />
