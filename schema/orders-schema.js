@@ -7,41 +7,40 @@ const { GraphQLObjectType, GraphQLString, GraphQLSchema, GraphQLID, GraphQLInt, 
 
 const OrderType = new GraphQLObjectType({
     name: `Order`,
-    fields: ()=>({
-        OrderID: {type: GraphQLID},
-        CustomerID: {type: GraphQLString},
-        EmployeeID: {type: GraphQLID},
-        OrderDate: {type: GraphQLString},
-        RequiredDate: {type: GraphQLString},
-        ShippedDate: {type: GraphQLString},
-        ShipVia: {type: GraphQLInt},
-        Freight: {type: GraphQLFloat},
-        ShipName: {type: GraphQLString},
-        ShipAddress: {type: GraphQLString},
-        ShipCity: {type: GraphQLString},
-        ShipRegion: {type: GraphQLString},
-        ShipPostalCode: {type: GraphQLString},
-        ShipCountry: {type: GraphQLString},
-        Customer: {type: GraphQLString},
-        Employee: {type: GraphQLString},
-        Shipper: {type: GraphQLString}
-        
+    fields: () => ({
+        OrderID: { type: GraphQLID },
+        CustomerID: { type: GraphQLString },
+        EmployeeID: { type: GraphQLID },
+        OrderDate: { type: GraphQLString },
+        RequiredDate: { type: GraphQLString },
+        ShippedDate: { type: GraphQLString },
+        ShipVia: { type: GraphQLInt },
+        Freight: { type: GraphQLFloat },
+        ShipName: { type: GraphQLString },
+        ShipAddress: { type: GraphQLString },
+        ShipCity: { type: GraphQLString },
+        ShipRegion: { type: GraphQLString },
+        ShipPostalCode: { type: GraphQLString },
+        ShipCountry: { type: GraphQLString },
+        Customer: { type: GraphQLString },
+        Employee: { type: GraphQLString },
+        Shipper: { type: GraphQLString }
     })
 })
 
 const CustomerType = new GraphQLObjectType({
     name: `Customer`,
     fields: () => ({
-        Value: {type: GraphQLString},
-        Text: {type: GraphQLString},
+        Value: { type: GraphQLString },
+        Text: { type: GraphQLString },
     })
 })
 
 const ShipperType = new GraphQLObjectType({
     name: `Shipper`,
     fields: () => ({
-        Value: {type: GraphQLInt},
-        Text: {type: GraphQLString},
+        Value: { type: GraphQLInt },
+        Text: { type: GraphQLString },
     })
 })
 
@@ -75,44 +74,41 @@ const Mutation = new GraphQLObjectType({
         InsertOrder: {
             type: OrderType,
             args: ({
-                CustomerID: {type: GraphQLString},
-                OrderDate: {type: GraphQLString},
-                Freight: {type: GraphQLFloat},
-                ShipCountry: {type: GraphQLString}, 
-                ShipVia: {type: GraphQLInt}
+                CustomerID: { type: GraphQLString },
+                OrderDate: { type: GraphQLString },
+                Freight: { type: GraphQLFloat },
+                ShipCountry: { type: GraphQLString }, 
+                ShipVia: { type: GraphQLInt }
             }),
-            resolve(parent, args){
+            resolve(parent, args) {
                 const newOrderID = Math.max(...orders.map(order => order.OrderID)) + 1;
                 const newOrder = { OrderID: newOrderID, ...args }
-                console.log(`CREATE ${JSON.stringify(newOrder)}`)
                 orders.push(newOrder);
                 return orders[orders.length - 1];
             }
         },
         DeleteOrder: {
             type: OrderType,
-            args: ({OrderID: {type: GraphQLID}}),
-            resolve (parent, args){
-                const index = orders.findIndex(order=>order.OrderID == args.OrderID);
-                console.log(`DELETE {${args.OrderID}}`)
+            args: ({ OrderID: { type: GraphQLID } }),
+            resolve(parent, args) {
+                const index = orders.findIndex(order => order.OrderID == args.OrderID);
                 return orders.splice(index, 1);
             }
         },
         UpdateOrder: {
             type: OrderType,
             args: ({
-                OrderID: {type: GraphQLID},
-                CustomerID: {type: GraphQLString},
-                OrderDate: {type: GraphQLString},
-                Freight: {type: GraphQLFloat},
-                ShipCountry: {type: GraphQLString}, 
-                ShipVia: {type: GraphQLInt}
+                OrderID: { type: GraphQLID },
+                CustomerID: { type: GraphQLString },
+                OrderDate: { type: GraphQLString },
+                Freight: { type: GraphQLFloat },
+                ShipCountry: { type: GraphQLString }, 
+                ShipVia: { type: GraphQLInt }
             }),
             resolve(parent, args) {
-                const index = orders.findIndex(order=>order.OrderID == args.OrderID);
+                const index = orders.findIndex(order => order.OrderID == args.OrderID);
                 const oldOrder = orders[index];
-                const newOrder = {...oldOrder, ...args}
-                console.log(`UPDATE ${JSON.stringify(newOrder)}`)
+                const newOrder = { ...oldOrder, ...args }
                 orders.splice(index, 1, newOrder)
                 return newOrder;
             }
